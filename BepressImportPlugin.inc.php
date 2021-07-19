@@ -60,6 +60,8 @@ class BepressImportPlugin extends ImportExportPlugin {
 		$editorUsername = array_shift($args);
 		$defaultEmail = array_shift($args);
 		$directoryName = rtrim(array_shift($args), '/');
+		
+		
 
 		if (!$journalPath || !$username || !$editorUsername || !$directoryName || !$defaultEmail) {
 			$this->usage($scriptName);
@@ -88,8 +90,10 @@ class BepressImportPlugin extends ImportExportPlugin {
 
 		if (!file_exists($directoryName) && is_dir($directoryName) ) {
 			echo __('plugins.importexport.bepress.directoryDoesNotExist', array('directory' => $directoryName)) . "\n";
+			
 			exit();
 		}
+		
 
 		if (!filter_var($defaultEmail, FILTER_VALIDATE_EMAIL)){
 			echo __('plugins.importexport.bepress.unknownEmail', array('email' => $defaultEmail)). "\n";
@@ -127,6 +131,7 @@ class BepressImportPlugin extends ImportExportPlugin {
 				$importArticles = array();
 				$articleHandle = opendir($issuePath);
 				while ($importArticles[] = readdir($articleHandle));
+				
 				sort($importArticles, SORT_NATURAL);
 				closedir($articleHandle);
 
@@ -134,31 +139,41 @@ class BepressImportPlugin extends ImportExportPlugin {
 				$allSectionIds = array();
 
 				foreach ($importArticles as $entry) {
-					$articlePath = $issuePath . '/' . $entry;
+					$articlePath = $issuePath . '/' . $entry;					
 					if (!is_dir($articlePath) || preg_match('/^\./', $entry)) continue;
+					echo "\n==========Entry: {$entry}============\n";
 
 					// Process all article files
 					$articleFileHandle = opendir($articlePath);
 					$importFiles = array();
 					while ($importFiles[] = readdir($articleFileHandle));
+					
 					sort($importFiles, SORT_NATURAL);
 					closedir($articleFileHandle);
 
+					
 					$xmlArticleFile = null;
 					$pdfArticleFiles = array();
 					foreach($importFiles as $importFile){
+					echo "\n\nimportFile=" . $importFile . "\n";
 						if (preg_match('/metadata\.xml$/', $importFile) && !$xmlArticleFile){
 							$xmlArticleFile = $articlePath . '/' . $importFile;
-						} elseif (preg_match('/fulltext(\.[a-z]{2}_[A-Z]{2})?\.pdf$/', $importFile)){
+						}// elseif (preg_match('/fulltext(\.[a-z]{2}_[A-Z]{2})?\.pdf$/', $importFile)){
+						 elseif (preg_match('/(.*)\.pdf$/', $importFile)){
 							$pdfArticleFile = $articlePath . '/' . $importFile;
 							array_push($pdfArticleFiles, $pdfArticleFile);
 						}
 					}
-					if (!$xmlArticleFile || empty($pdfArticleFiles)) continue;
+					echo "\nxmlArticleFile = " . $xmlArticleFile . "\n";
+					if ( is_null($xmlArticleFile)) {
+						echo "\n============\nxmlArticleFile is blank = " . $xmlArticleFile;
+						continue;
+						} 
 
 					if (is_file($xmlArticleFile)) {
 						$xmlArticle = $this->getDocument($xmlArticleFile);
 						if ($xmlArticle) {
+						echo "\nReading xmlArticleFile = " . $xmlArticleFile . "\n";
 							$number = null;
 							preg_match_all('/\d+/', basename(dirname(dirname($xmlArticleFile))), $number);
 							$shiftedArray = array_shift($number);
@@ -208,6 +223,8 @@ class BepressImportPlugin extends ImportExportPlugin {
 								$articleTitle = $article->getCurrentPublication()->getLocalizedTitle();
 								echo __('plugins.importexport.bepress.articleImported', array('title' => $articleTitle)) . "\n\n";
 							}
+						}else{
+						echo "\nERROR: Unable to get document xmlArticleFile = " . $xmlArticleFile . "\n";
 						}
 					}
 				}

@@ -58,7 +58,7 @@ class BepressImportDom {
 	 * @return array Imported objects with the following keys: 'issue', 'section', 'article'
 	 */
 	function importArticle() {
-		if (!$this->_journal || !$this->_user || !$this->_editor || !$this->_xmlArticle || !$this->_pdfPaths || !$this->_volume || !$this->_number || !$this->_defaultEmail) {
+		if (!$this->_journal || !$this->_user || !$this->_editor || !$this->_xmlArticle  || !$this->_volume || !$this->_number || !$this->_defaultEmail) {
 			return null;
 		}
 
@@ -705,6 +705,8 @@ class BepressImportDom {
 		$submissionFileManager = new SubmissionFileManager($this->_journal->getId(), $this->_submission->getId());
 
 		import('lib.pkp.classes.submission.SubmissionFile'); // constants
+	
+		
 		$submissionFile = $submissionFileManager->copySubmissionFile(
 			$pdfPath,
 			SUBMISSION_FILE_PROOF,
